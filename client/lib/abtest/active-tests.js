@@ -113,5 +113,13 @@ module.exports = {
 			hideVerticalScreenshots: 50,
 		},
 		defaultVariation: 'hideVerticalScreenshots',
+	},
+	siteTitleStep: {
+		datestamp: '20160928',
+		variations: {
+			showSiteTitleStep: 95,
+			hideSiteTitleStep: 5,
+		},
+		defaultVariation: 'hideSiteTitleStep'
 	}
 };
