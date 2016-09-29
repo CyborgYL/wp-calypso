@@ -60,7 +60,8 @@ export class FullPostView extends React.Component {
 			'handleBack',
 			'handleCommentClick',
 			'handleLike',
-			'bindComments'
+			'bindComments',
+			'handleRelatedPostClicked',
 		].forEach( fn => {
 			this[ fn ] = this[ fn ].bind( this );
 		} );
@@ -96,6 +97,10 @@ export class FullPostView extends React.Component {
 	}
 
 	handleBack() {
+		recordAction( 'full_post_close' );
+		recordGaEvent( 'Closed Full Post Dialog' ); // TODO: see if action || 'backdrop' is something needed
+		recordTrackForPost( 'calypso_reader_article_closed', this.props.post );
+
 		this.props.onClose && this.props.onClose();
 	}
 
@@ -113,13 +118,18 @@ export class FullPostView extends React.Component {
 	handleLike() {
 		recordAction( 'click_like' );
 		recordGaEvent( 'Clicked Like Post Button' );
-		recordTrackForPost( 'calypso_reader_full_post_like_button_clicked', this.props.post );
+		recordTrackForPost( 'calypso_reader_full_post_like_button_clicked', this.props.post ); // TODO have discussion about the desired difference between this and calypso_reader_article_liked
+
 		const { site_ID: siteId, ID: postId } = this.props.post;
 		if ( LikeStore.isPostLikedByCurrentUser( siteId, postId ) ) {
 			unlikePost( siteId, postId );
 		} else {
 			likePost( siteId, postId );
 		}
+	}
+
+	handleRelatedPostClicked() {
+		recordTrackForPost( 'calypso_reader_related_post_clicked', this.props.post );
 	}
 
 	bindComments( node ) {
@@ -193,7 +203,8 @@ export class FullPostView extends React.Component {
 								feedUrl= { get( feed, 'feed_URL' ) }
 								followCount={ site && site.subscribers_count }
 								feedId={ +post.feed_ID }
-								siteId={ +post.site_ID } />
+								siteId={ +post.site_ID }
+								post={ post } />
 						}
 						{ shouldShowComments( post ) &&
 							<CommentButton key="comment-button"
@@ -204,6 +215,7 @@ export class FullPostView extends React.Component {
 						{ shouldShowLikes( post ) &&
 							<LikeButton siteId={ post.site_ID }
 								postId={ post.ID }
+								post={ post }
 								fullPost={ true }
 								tagName="div" />
 						}
@@ -243,7 +255,7 @@ export class FullPostView extends React.Component {
 						<ReaderFullPostActionLinks post={ post } site={ site } onCommentClick={ this.handleCommentClick } />
 
 						{ showRelatedPosts &&
-							<RelatedPostsFromSameSite siteId={ post.site_ID } postId={ post.ID }
+							<RelatedPostsFromSameSite siteId={ +post.site_ID } postId={ +post.ID }
 								title={
 									translate( 'More in {{ siteLink /}}', {
 										components: {
@@ -251,7 +263,8 @@ export class FullPostView extends React.Component {
 										}
 									} )
 								}
-								className="is-same-site" />
+								className="is-same-site"
+								onPostClick={ this.handleRelatedPostClicked } />
 						}
 
 						{ shouldShowComments( post )
@@ -264,9 +277,10 @@ export class FullPostView extends React.Component {
 						}
 
 						{ showRelatedPosts &&
-							<RelatedPostsFromOtherSites siteId={ post.site_ID } postId={ post.ID }
+							<RelatedPostsFromOtherSites siteId={ +post.site_ID } postId={ +post.ID }
 								title={ relatedPostsFromOtherSitesTitle }
-								className="is-other-site" />
+								className="is-other-site"
+								onPostClick={ this.handleRelatedPostClicked } />
 						}
 					</article>
 				</div>

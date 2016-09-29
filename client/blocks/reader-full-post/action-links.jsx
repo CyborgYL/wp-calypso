@@ -7,7 +7,8 @@ import React from 'react';
  * Internal dependencies
  */
 import CommentButton from 'blocks/comment-button';
-import LikeButton from 'reader/like-button';
+//import LikeButton from 'reader/like-button'; // TODO why reader/like-button vs. blocks/like-button ?
+import LikeButton from 'blocks/like-button';
 import ShareButton from 'reader/share';
 import PostEditButton from 'blocks/post-edit-button';
 import { shouldShowComments } from 'blocks/comments/helper';
@@ -51,6 +52,7 @@ const ReaderFullPostActionLinks = ( { post, site, onCommentClick } ) => {
 						siteId={ post.site_ID }
 						postId={ post.ID }
 						fullPost={ true }
+						post={ post }
 						tagName="div"
 						forceCounter={ true } />
 				</li>

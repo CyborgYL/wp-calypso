@@ -11,6 +11,7 @@ import { omit, noop } from 'lodash';
 import LikeActions from 'lib/like-store/actions';
 import LikeButton from './button';
 import LikeStore from 'lib/like-store/like-store';
+import { recordAction, recordGaEvent, recordTrackForPost } from 'reader/stats';
 
 const LikeButtonContainer = React.createClass( {
 	propTypes: {
@@ -68,6 +69,11 @@ const LikeButtonContainer = React.createClass( {
 	handleLikeToggle( liked ) {
 		LikeActions[ liked ? 'likePost' : 'unlikePost' ]( this.props.siteId, this.props.postId );
 		this.props.onLikeToggle( liked );
+
+		recordAction( liked ? 'liked_post' : 'unliked_post' );
+		recordGaEvent( liked ? 'Clicked Like Post' : 'Clicked Unlike Post' );
+		recordTrackForPost( liked ? 'calypso_reader_article_liked' : 'calypso_reader_article_unliked', this.props.post,
+				{ context: this.props.fullPost ? 'full-post' : 'card' } );
 	},
 
 	render() {
