@@ -179,6 +179,7 @@ module.exports = React.createClass( {
 
 		return (
 			<SearchCard
+				autoFocus
 				onSearch={ this.doSearch }
 				initialValue={ this.props.search }
 				placeholder={ this.translate( 'Search Plugins' ) }
