@@ -54,6 +54,20 @@ function creditCardFieldRules() {
 	};
 }
 
+function parseExpiration(value) {
+	const [month, year] = value.split( '/' );
+	return {
+		month: creditcards.expiration.month.parse(month),
+		year: creditcards.expiration.year.parse(year, true)
+	}
+}
+
+function validationError(description ) {
+	return i18n.translate( '%(description)s is invalid', {
+		args: { description: capitalize( description ) }
+	} );
+}
+
 const validators = {};
 
 validators.required = {
@@ -68,54 +82,30 @@ validators.required = {
 	}
 };
 
-validators.validCreditCardNumber = creditCardValidator( 'validCardNumber' );
+validators.validCreditCardNumber = {
+	isValid: function( value ) {
+		return creditcards.card.isValid(value);
+	},
+	error: validationError
+} ;
 
-validators.validCvvNumber = creditCardValidator( 'validCvc' );
+validators.validCvvNumber = {
+	isValid: function( value ) {
+		return creditcards.cvc.isValid(value);
+	},
+	error: validationError
+} ;
 
-validators.validExpirationDate = creditCardValidator(
-	'notExpired',
-	'validExpirationMonth',
-	'validExpirationYear',
-);
+validators.validExpirationDate = {
+	isValid: function ( value ) {
+		const expiration = parseExpiration(value);
 
-function validateCreditCard( cardDetails ) {
-	const expirationDate = cardDetails[ 'expiration-date' ] || '/',
-		expirationMonth = parseInt( expirationDate.split( '/' )[ 0 ], 10 ),
-		expirationYear = 2000 + parseInt( expirationDate.split( '/' )[ 1 ], 10 );
-
-	return creditcards.validate( {
-		number: cardDetails.number,
-		expirationMonth: expirationMonth,
-		expirationYear: expirationYear,
-		cvc: cardDetails.cvv
-	} );
-}
-
-function creditCardValidator( ...validationProperties ) {
-	return {
-		isValid: function( value, cardDetails ) {
-			if ( ! value ) {
-				return false;
-			}
-
-			const validationResult = validateCreditCard( cardDetails );
-
-			return validationProperties.every( function( property ) {
-				if ( property === 'notExpired' ) {
-					return ! validationResult.expired;
-				}
-
-				return validationResult[ property ];
-			} );
-		},
-
-		error: function( description ) {
-			return i18n.translate( '%(description)s is invalid', {
-				args: { description: capitalize( description ) }
-			} );
-		}
-	};
-}
+		return creditcards.expiration.month.isValid( expiration.month ) &&
+			creditcards.expiration.year.isValid( expiration.year ) &&
+			!creditcards.expiration.isPast( expiration.month, expiration.year );
+	},
+	error: validationError
+};
 
 function validateCardDetails( cardDetails ) {
 	const rules = creditCardFieldRules(),
